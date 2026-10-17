@@ -63,9 +63,16 @@ async def strip(file: UploadFile = File(None),
                 language: str = Form("en-IN"),
                 scenario: str = Form("match")):
     provider = get_provider()
-    data = await file.read() if file is not None else b""
-    read = provider.read_strip(data, getattr(file, "filename", "strip.png") or "strip.png",
-                               language=language, scenario=scenario)
+    if file is None:
+        # Scenario buttons / voice commands have no real strip image — always use
+        # the canned verdict (free, reliable), even in live mode, so a demo tap
+        # never fires an empty Vision call or spends credits.
+        from app.providers.mock import MockProvider
+        read = MockProvider().read_strip(b"", "strip.png", language=language, scenario=scenario)
+    else:
+        data = await file.read()
+        read = provider.read_strip(data, file.filename or "strip.png",
+                                   language=language, scenario=scenario)
     result = cc.check(read.get("name", ""), read.get("strength"),
                       read.get("expiry"), STATE["rx"])
     spoken = safety.speak_strip(result, language)
