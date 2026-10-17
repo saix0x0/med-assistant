@@ -161,11 +161,11 @@ the app can never crash for a missing key.
 
 ---
 
-## Running it
+## Running Med Assistant
 
-### Quick start (mock mode — no API key required)
+### 1. Run locally
 
-Requirements: Git and Python 3.10+.
+**Requirements:** Git and Python 3.10 or later.
 
 ```bash
 git clone https://github.com/saix0x0/med-assistant.git
@@ -173,17 +173,38 @@ cd med-assistant
 bash run.sh
 ```
 
-Open http://localhost:8077 in your browser.
+Open **http://localhost:8077** in your browser.
 
-The app runs locally in mock mode without a Sarvam API key. Keep the terminal open while using it; press `Ctrl+C` to stop the server.
+The application starts in mock mode by default, so you can explore the interface without a Sarvam API key. Keep the terminal open while using the application. Press `Ctrl+C` in the terminal to stop the server.
 
-Camera and microphone access work on localhost. The local URL is accessible only on the computer running the app.
+> **Note:** The application runs on your computer. The localhost URL is not a public website. Camera and microphone permissions should be allowed when your browser requests them.
 
-### Run with live Sarvam AI
+### 2. Choose how you want to use Med Assistant
 
-To use live Sarvam models, create a `.env` file in the project root containing:
+Med Assistant is designed for patients, people with low vision, nurses, caregivers, and anyone who needs help understanding a prescription.
 
-```dotenv
+- **Voice Mode:** Speak to the assistant using your microphone to ask questions or interact hands-free. Allow microphone access when prompted, then select the voice interaction control and follow the on-screen instructions.
+- **Prescription Reading:** Upload or capture a prescription to extract its medicine names and instructions. Review the extracted information rather than assuming every handwritten word was recognised correctly.
+- **Tablet Check (Nurse Mode):** Use the tablet-check workflow to compare a medicine strip against the prescription. The application returns a verdict based on the information available and flags potential mismatches.
+- **Medication Information:** Ask questions about the medicines and instructions recorded in the application. Use the results to understand the prescription, not to independently change your treatment.
+
+*The exact controls and available features may depend on the current application version and whether mock or live mode is enabled.*
+
+### 3. How it works
+
+1. **Input:** Upload or capture a prescription, provide medicine-strip information, or speak through Voice Mode.
+2. **Recognition:** The application processes the input to identify prescription text or the information needed for a medicine check.
+3. **Interpretation:** Where live integrations are configured, Sarvam AI models can help interpret text and support multilingual interactions.
+4. **Verification:** Application logic checks the available medicine information against the prescription and identifies potential mismatches or missing information.
+5. **Response:** The application presents the result and, where supported, communicates through voice to make the information more accessible.
+
+The goal is to combine AI-assisted interpretation with deterministic checks rather than relying on a language model alone to decide whether medicines match.
+
+### 4. Try live Sarvam AI integration
+
+To use live integrations, create a `.env` file in the project root:
+
+```env
 SARVAM_API_KEY=your_actual_api_key
 MODE=sarvam
 ```
@@ -196,14 +217,20 @@ Verify the API connection:
 .venv/bin/python hello_sarvam.py
 ```
 
-Then start the application using `bash run.sh`.
+Then start the application:
 
-Live mode requires a valid API key and access to the required Sarvam APIs.
+```bash
+bash run.sh
+```
 
-### Run tests
+Live mode requires a valid API key and access to the required Sarvam APIs. Features that depend on live integrations may behave differently from mock mode.
+
+### 5. Run tests
 
 ```bash
 .venv/bin/python -m pytest -q
 ```
 
-For public access, deploy the app separately; localhost is not a public website.
+### Important safety note
+
+Med Assistant is an accessibility and prescription-understanding aid, **not a replacement for a doctor or pharmacist**. Always verify unclear prescriptions and medicine mismatches with a qualified healthcare professional. Do not start, stop, or change medication based solely on the application's output.
