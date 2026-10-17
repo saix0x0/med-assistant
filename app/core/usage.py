@@ -13,6 +13,18 @@ _lock = Lock()
 _counts = {"vision": 0, "chat": 0, "tts": 0, "stt": 0}
 _tokens = {"chat_tokens": 0, "vision_pages": 0}
 
+# Approx INR rates observed on the Indus usage console (Vision = Doc Agents).
+# These drive the on-screen estimate only; the Indus console is authoritative.
+RATE_VISION_PER_PAGE = 0.50      # ₹ per page
+RATE_CHAT_PER_1K = 0.025         # ₹ per 1,000 chat tokens
+
+
+def _est_cost() -> float:
+    pages = _tokens["vision_pages"] or _counts["vision"]   # 1 page/call if unknown
+    cost = pages * RATE_VISION_PER_PAGE
+    cost += (_tokens["chat_tokens"] / 1000.0) * RATE_CHAT_PER_1K
+    return round(cost, 2)
+
 
 def add(kind: str, tokens: int = 0, pages: int = 0) -> None:
     with _lock:
@@ -27,7 +39,8 @@ def add(kind: str, tokens: int = 0, pages: int = 0) -> None:
 def snapshot() -> dict:
     with _lock:
         total = sum(_counts.values())
-        return {"total": total, "by_kind": dict(_counts), **_tokens}
+        return {"total": total, "by_kind": dict(_counts),
+                "est_cost_inr": _est_cost(), **_tokens}
 
 
 def reset() -> None:

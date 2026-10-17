@@ -328,10 +328,12 @@ async function refreshUsage() {
     const pill = $("usage-pill");
     if (!pill) return;
     const k = u.by_kind || {};
-    pill.textContent = "Sarvam: " + (u.total || 0);
-    pill.title = `Billable Sarvam calls this session — Vision ${k.vision||0}, `
-               + `Chat ${k.chat||0}, TTS ${k.tts||0}, STT ${k.stt||0}`
-               + (u.live ? "" : " (mock = free, not counted)");
+    const cost = (u.est_cost_inr != null) ? u.est_cost_inr.toFixed(2) : "0.00";
+    pill.textContent = "Credits: ~₹" + cost;
+    pill.title = `Estimated Sarvam spend this session (~₹${cost}). `
+               + `Calls — Vision ${k.vision||0}, Chat ${k.chat||0} (${u.chat_tokens||0} tok), `
+               + `TTS ${k.tts||0}, STT ${k.stt||0}. `
+               + (u.live ? "Exact figure on the Indus console." : "Mock mode = free.");
   } catch (_) {}
 }
 function setStatus(s) { $("scan-status").textContent = s; }
