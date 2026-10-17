@@ -163,46 +163,47 @@ the app can never crash for a missing key.
 
 ## Running it
 
-**Quick start (mock mode — no keys, fully working):**
-```bash
-git clone https://github.com/saix0x0/med-assistant
-cd med-assistant
-./run.sh
-```
-Open **http://localhost:8000** (or **:8077** if 8000 is busy).
+### Quick start (mock mode — no API key required)
 
-**Run the tests:**
+Requirements: Git and Python 3.10+.
+
+```bash
+git clone https://github.com/saix0x0/med-assistant.git
+cd med-assistant
+bash run.sh
+```
+
+Open http://localhost:8077 in your browser.
+
+The app runs locally in mock mode without a Sarvam API key. Keep the terminal open while using it; press `Ctrl+C` to stop the server.
+
+Camera and microphone access work on localhost. The local URL is accessible only on the computer running the app.
+
+### Run with live Sarvam AI
+
+To use live Sarvam models, create a `.env` file in the project root containing:
+
+```dotenv
+SARVAM_API_KEY=your_actual_api_key
+MODE=sarvam
+```
+
+Replace `your_actual_api_key` with your own API key. Never commit `.env` to Git or share the key publicly.
+
+Verify the API connection:
+
+```bash
+.venv/bin/python hello_sarvam.py
+```
+
+Then start the application using `bash run.sh`.
+
+Live mode requires a valid API key and access to the required Sarvam APIs.
+
+### Run tests
+
 ```bash
 .venv/bin/python -m pytest -q
 ```
 
-**Go live on Sarvam:**
-```bash
-printf 'SARVAM_API_KEY=your_key_here\nMODE=sarvam\n' > .env   # gitignored
-.venv/bin/python hello_sarvam.py                              # proves the key
-.venv/bin/python -m uvicorn app.main:app --port 8077
-```
-Without a key it stays in mock mode automatically — nothing breaks.
-
-> Camera and microphone work on `localhost` or real HTTPS only; browsers block
-> them on a plain `http://<ip>` address.
-
----
-
-## Honest limitations
-
-- It **reads and matches only** — never medical advice; the disclaimer is spoken.
-- English doctor-scrawl can be hard for any reader; when unsure, the app **says so**
-  instead of guessing.
-- Niche medicine brands resolve best with the full Indian-medicine dataset dropped
-  in at `app/data/indian_medicines.csv`; a small seed list ships in the repo.
-- The dose log is in-memory for the demo (a real build stores it per patient).
-
----
-
-## Acknowledgements
-
-Built for **Sarvam Campus '26 × IIIT Hyderabad**, on Sarvam's AI platform —
-Sarvam Vision, Sarvam-105B, Bulbul and Saaras.
-
-Deeper write-up: [`REPORT.md`](REPORT.md) · Build notes: [`CONTEXT.md`](CONTEXT.md)
+For public access, deploy the app separately; localhost is not a public website.
