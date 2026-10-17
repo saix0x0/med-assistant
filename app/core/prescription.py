@@ -73,6 +73,8 @@ def parse(raw_text: str, assisted: Optional[list] = None) -> Prescription:
 
     if assisted:
         for item in assisted:
+            if not (item.get("name") or "").strip():
+                continue                       # skip empty rows from the LLM
             rx.medicines.append(_build(
                 raw_line=item.get("raw", ""),
                 read_name=item.get("name", ""),
@@ -96,7 +98,7 @@ def parse(raw_text: str, assisted: Optional[list] = None) -> Prescription:
 def _looks_like_med(line: str) -> bool:
     # a line with a strength (650 mg) and a dosing code is probably a med even
     # without a "Tab." prefix
-    return bool(_STRENGTH.search(line) and re.search(r"[01][-–xX|][01]", line))
+    return bool(_STRENGTH.search(line) and re.search(r"[01][-–xX|/][01]", line))
 
 
 def _split_line(line: str):
@@ -105,7 +107,7 @@ def _split_line(line: str):
     strength_m = _STRENGTH.search(s)
     strength = strength_m.group(1) if strength_m else None
     # dosing fragment = everything from the first dose-ish token onward
-    dose_start = re.search(r"([01½][-–xX|][01½]|[01½][-–xX|][01½][-–xX|][01½]"
+    dose_start = re.search(r"([01½][-–xX|/][01½]|[01½][-–xX|/][01½][-–xX|/][01½]"
                            r"|\b(?:OD|BD|TDS|TID|QID|HS|SOS|STAT|BID|QDS)\b)", s, re.I)
     dose_text = s[dose_start.start():] if dose_start else ""
     name = s[:dose_start.start()] if dose_start else s

@@ -93,7 +93,7 @@ def parse_dose(text: str) -> Dose:
             break
 
     # numeric slot pattern: 1-0-1, 1-1-1, 1-0-0-1, 0-0-1, with OCR-friendly separators
-    slot = re.search(r"\b([01½\d])\s*[-–xX|]\s*([01½\d])\s*[-–xX|]\s*([01½\d])(?:\s*[-–xX|]\s*([01½\d]))?\b", raw)
+    slot = re.search(r"\b([01½\d])\s*[-–xX|/]\s*([01½\d])\s*[-–xX|/]\s*([01½\d])(?:\s*[-–xX|/]\s*([01½\d]))?\b", raw)
     if slot:
         vals = [slot.group(i) for i in range(1, 5)]
         nums = [_num(v) for v in vals if v is not None]

@@ -19,6 +19,7 @@ import time
 from typing import List, Optional
 
 from app import config
+from app.core import usage
 
 _client = None
 
@@ -41,6 +42,7 @@ def _vision(data: bytes, filename: str, content_type: str, language: str) -> str
         language=language,
         content_type=content_type,
     )
+    usage.add("vision")                   # one billable Vision job
     job_id = getattr(start, "job_id", None) or start["job_id"]
     for _ in range(30):                      # poll up to ~30s
         status = client.doc_ai.get_status(job_id)
@@ -50,12 +52,22 @@ def _vision(data: bytes, filename: str, content_type: str, language: str) -> str
         if state in ("failed", "rejected"):
             return ""
         time.sleep(1)
-    res = client.doc_ai.get_results(job_id, format="md")
-    pages = []
+    # The real text lives in each page's blocks[].text. page.content is often
+    # None, and the md/html/text formats can 400 or return non-utf8 bytes, so we
+    # use the json result and pull the block text.
+    res = client.doc_ai.get_results(job_id, format="json")
+    chunks = []
     for doc in getattr(res, "documents", []) or []:
         for pg in getattr(doc, "pages", []) or []:
-            pages.append(getattr(pg, "content", "") or "")
-    return "\n".join(pages).strip()
+            c = getattr(pg, "content", None)
+            if c:
+                chunks.append(c)
+                continue
+            for b in getattr(pg, "blocks", []) or []:
+                t = b.get("text") if isinstance(b, dict) else getattr(b, "text", "")
+                if t:
+                    chunks.append(t)
+    return "\n".join(chunks).strip()
 
 
 def _mime(filename: str) -> str:
@@ -95,6 +107,7 @@ class SarvamProvider:
             start = client.doc_ai.extract(
                 file=[(filename, io.BytesIO(data), _mime(filename))],
                 schema=schema, content_type="printed", language=language)
+            usage.add("vision")               # one billable Vision job
             job_id = getattr(start, "job_id", None) or start["job_id"]
             for _ in range(30):
                 st = client.doc_ai.get_status(job_id)
@@ -124,6 +137,7 @@ class SarvamProvider:
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.1,
                 response_format={"type": "json_object"})
+            usage.add("chat", tokens=_tok(resp))
             content = resp.choices[0].message.content
             return json.loads(content).get("medicines")
         except Exception:
@@ -139,6 +153,7 @@ class SarvamProvider:
                 model=config.CHAT_MODEL,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.1)
+            usage.add("chat", tokens=_tok(resp))
             return resp.choices[0].message.content.strip()
         except Exception as e:
             return f"[chat-error] {e}"
@@ -150,6 +165,7 @@ class SarvamProvider:
             resp = _c().text_to_speech.convert(
                 text=text[:2400], target_language_code=language,
                 model=config.TTS_MODEL)
+            usage.add("tts")
             audios = getattr(resp, "audios", None) or resp["audios"]
             return base64.b64decode("".join(audios))
         except Exception:
@@ -158,11 +174,21 @@ class SarvamProvider:
     def transcribe(self, audio: bytes, language: str = "en-IN") -> str:
         import io
         try:
-            return _c().speech_to_text.transcribe(
+            out = _c().speech_to_text.transcribe(
                 file=io.BytesIO(audio), model=config.STT_MODEL,
                 mode="transcribe").transcript
+            usage.add("stt")
+            return out
         except Exception:
             return ""
+
+
+def _tok(resp) -> int:
+    """Best-effort total token count from a chat response, for the usage meter."""
+    u = getattr(resp, "usage", None)
+    if u is None:
+        return 0
+    return getattr(u, "total_tokens", 0) or 0
 
 
 def _first_json(res) -> dict:

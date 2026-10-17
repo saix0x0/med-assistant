@@ -40,6 +40,7 @@ async function boot() {
   $("btn-mic").addEventListener("click", askVoice);
   $("btn-logadd").addEventListener("click", addLog);
   buildScenarioButtons();
+  refreshUsage();
 
   // Voice control (optional layer; all clicks keep working without it).
   $("voice-toggle").addEventListener("click", toggleVoice);
@@ -185,6 +186,7 @@ async function scanFile(file) {
     const r = await (await fetch("/api/scan", { method: "POST", body: fd })).json();
     setStatus("");
     renderRx(r.prescription, r.spoken_text);
+    refreshUsage();
   } catch (e) { setStatus("Could not read. Please try again."); }
 }
 function renderRx(rx, spoken) {
@@ -234,6 +236,7 @@ async function checkStrip(scenario) {
   v.className = "verdict show " + cls;
   v.innerHTML = `<span class="vhead">${head}</span>${esc(r.spoken_text)}`;
   speak(r.spoken_text);
+  refreshUsage();
 }
 
 /* ---------- ask ---------- */
@@ -286,6 +289,7 @@ async function sendQuestion(q) {
   const r = await (await fetch("/api/ask", { method: "POST", body: fd })).json();
   $("answer").textContent = r.answer;
   speak(r.answer);
+  refreshUsage();
 }
 
 /* ---------- dose log ---------- */
@@ -317,6 +321,18 @@ function speak(text) {
   u.lang = $("language").value;
   u.rate = 0.95;
   window.speechSynthesis.speak(u);
+}
+async function refreshUsage() {
+  try {
+    const u = await (await fetch("/api/usage")).json();
+    const pill = $("usage-pill");
+    if (!pill) return;
+    const k = u.by_kind || {};
+    pill.textContent = "Sarvam: " + (u.total || 0);
+    pill.title = `Billable Sarvam calls this session — Vision ${k.vision||0}, `
+               + `Chat ${k.chat||0}, TTS ${k.tts||0}, STT ${k.stt||0}`
+               + (u.live ? "" : " (mock = free, not counted)");
+  } catch (_) {}
 }
 function setStatus(s) { $("scan-status").textContent = s; }
 function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, (c) =>

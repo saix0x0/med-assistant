@@ -23,6 +23,7 @@ from app.core import crosscheck as cc
 from app.core import log as dose_log
 from app.core import prescription as rx_mod
 from app.core import safety
+from app.core import usage as usage_mod
 from app.providers import get_provider
 
 app = FastAPI(title="Med Assistant")
@@ -104,6 +105,12 @@ async def transcribe(file: UploadFile = File(...), language: str = Form("en-IN")
     data = await file.read()
     text = provider.transcribe(data, language)
     return JSONResponse({"ok": True, "text": text, "provider": provider.name})
+
+
+@app.get("/api/usage")
+def usage():
+    """How many billable Sarvam calls this session has made (mock calls are free)."""
+    return {"ok": True, "live": not config.is_mock(), **usage_mod.snapshot()}
 
 
 @app.get("/api/state")

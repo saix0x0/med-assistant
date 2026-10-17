@@ -32,3 +32,11 @@ def test_sos_prn():
 def test_ocr_noisy_separator():
     d = parse_dose("1 - 0 - 1")
     assert (d.morning, d.night) == (1, 1)
+
+
+def test_slash_separator():
+    # doctors often write 1/1/1 or 1/0/1 with slashes
+    d = parse_dose("1/1/1")
+    assert (d.morning, d.noon, d.night) == (1, 1, 1)
+    d2 = parse_dose("1/0/1")
+    assert (d2.morning, d2.noon, d2.night) == (1, 0, 1)
