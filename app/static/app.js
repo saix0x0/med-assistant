@@ -1,0 +1,214 @@
+/* Sarvam Rx Assistant - front-end logic.
+ * Talks to the FastAPI backend; speaks results with the browser voice today
+ * (swappable for Bulbul server-side). No framework, plain DOM. */
+"use strict";
+
+const $ = (id) => document.getElementById(id);
+const state = { mode: null, stream: null, lastSpoken: "" };
+
+const MODE_META = {
+  patient:  { heading: "Patient", show: ["verify", "ask", "logpanel"], voice: true },
+  caretaker:{ heading: "Caretaker / Nurse", show: ["verify", "logpanel"], voice: false },
+  quick:    { heading: "Quick read", show: [], voice: false },
+};
+
+/* ---------- boot ---------- */
+async function boot() {
+  try {
+    const h = await (await fetch("/api/health")).json();
+    const pill = $("mode-pill");
+    if (h.mock) { pill.textContent = "Mock mode (no keys)"; pill.className = "pill pill-mock"; }
+    else { pill.textContent = "Live: Sarvam"; pill.className = "pill pill-live"; }
+    $("footer-models").textContent =
+      `Sarvam Vision · ${h.models.chat} · Bulbul · Saaras`;
+  } catch (e) { /* offline is fine */ }
+
+  document.querySelectorAll(".mode-card").forEach((c) =>
+    c.addEventListener("click", () => enterMode(c.dataset.mode)));
+  $("back").addEventListener("click", leaveMode);
+
+  $("btn-camera").addEventListener("click", startCamera);
+  $("btn-stopcam").addEventListener("click", stopCamera);
+  $("btn-capture").addEventListener("click", captureFrame);
+  $("file").addEventListener("change", (e) => { if (e.target.files[0]) scanFile(e.target.files[0]); });
+  setupDrop();
+
+  $("btn-replay").addEventListener("click", () => speak(state.lastSpoken));
+  $("btn-ask").addEventListener("click", askText);
+  $("btn-mic").addEventListener("click", askVoice);
+  $("btn-logadd").addEventListener("click", addLog);
+  buildScenarioButtons();
+}
+
+/* ---------- mode switching ---------- */
+function enterMode(mode) {
+  state.mode = mode;
+  const meta = MODE_META[mode];
+  $("chooser").classList.add("hidden");
+  $("workspace").classList.remove("hidden");
+  $("mode-heading").textContent = meta.heading;
+  ["verify", "ask", "logpanel"].forEach((p) =>
+    $(p).classList.toggle("hidden", !meta.show.includes(p)));
+  $("rx-result").classList.add("hidden");
+  refreshLog();
+}
+function leaveMode() {
+  stopCamera();
+  $("workspace").classList.add("hidden");
+  $("chooser").classList.remove("hidden");
+}
+
+/* ---------- camera + file ---------- */
+async function startCamera() {
+  try {
+    state.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+    const cam = $("cam");
+    cam.srcObject = state.stream;
+    cam.classList.remove("hidden");
+    $("droparea").classList.add("hidden");
+    $("cam-controls").classList.remove("hidden");
+    if (MODE_META[state.mode].voice) speak("Hold the prescription flat in front of the camera, then press capture.");
+  } catch (e) { setStatus("Camera not available. Use Choose file instead."); }
+}
+function stopCamera() {
+  if (state.stream) { state.stream.getTracks().forEach((t) => t.stop()); state.stream = null; }
+  $("cam").classList.add("hidden");
+  $("cam-controls").classList.add("hidden");
+  $("droparea").classList.remove("hidden");
+}
+function captureFrame() {
+  const cam = $("cam"), snap = $("snap");
+  snap.width = cam.videoWidth || 1280;
+  snap.height = cam.videoHeight || 720;
+  snap.getContext("2d").drawImage(cam, 0, 0, snap.width, snap.height);
+  snap.toBlob((blob) => { stopCamera(); scanFile(new File([blob], "capture.png", { type: "image/png" })); }, "image/png");
+}
+function setupDrop() {
+  const d = $("droparea");
+  d.addEventListener("click", () => $("file").click());
+  ["dragover", "dragenter"].forEach((ev) =>
+    d.addEventListener(ev, (e) => { e.preventDefault(); d.classList.add("drag"); }));
+  ["dragleave", "drop"].forEach((ev) =>
+    d.addEventListener(ev, (e) => { e.preventDefault(); d.classList.remove("drag"); }));
+  d.addEventListener("drop", (e) => { if (e.dataTransfer.files[0]) scanFile(e.dataTransfer.files[0]); });
+}
+
+/* ---------- scan prescription ---------- */
+async function scanFile(file) {
+  setStatus("Reading the prescription…");
+  const fd = new FormData();
+  fd.append("file", file);
+  fd.append("language", $("language").value);
+  fd.append("content_type", "handwritten");
+  try {
+    const r = await (await fetch("/api/scan", { method: "POST", body: fd })).json();
+    setStatus("");
+    renderRx(r.prescription, r.spoken_text);
+  } catch (e) { setStatus("Could not read. Please try again."); }
+}
+function renderRx(rx, spoken) {
+  $("rx-result").classList.remove("hidden");
+  $("spoken").textContent = spoken;
+  const rows = [`<tr><th>Medicine</th><th>Strength</th><th>When</th><th>Days</th><th></th></tr>`];
+  rx.medicines.forEach((m) => {
+    const when = m.dose.prn ? "as needed" : (m.dose.times.join(", ") || "—") +
+      (m.dose.food ? ` (${m.dose.food} food)` : "");
+    const tag = m.matched ? `<span class="tag tag-ok">matched</span>`
+                          : `<span class="tag tag-low">check</span>`;
+    rows.push(`<tr><td>${esc(m.name)}</td><td>${esc(m.strength || "—")}</td>
+      <td>${esc(when)}</td><td>${m.dose.days || "—"}</td><td>${tag}</td></tr>`);
+  });
+  $("med-table").innerHTML = rows.join("");
+  state.lastSpoken = spoken;
+  if (MODE_META[state.mode].voice) speak(spoken);
+}
+
+/* ---------- verify a strip ---------- */
+function buildScenarioButtons() {
+  // In mock mode the strip image is ignored, so we expose the four demo cases.
+  const defs = [
+    ["match", "Tablet on the list"],
+    ["not_on_list", "Not on the list"],
+    ["expired", "Expired strip"],
+    ["unreadable", "Cannot read"],
+  ];
+  $("scenario-row").innerHTML = "";
+  defs.forEach(([sc, label]) => {
+    const b = document.createElement("button");
+    b.className = "btn btn-ghost";
+    b.textContent = label;
+    b.addEventListener("click", () => checkStrip(sc));
+    $("scenario-row").appendChild(b);
+  });
+}
+async function checkStrip(scenario) {
+  const fd = new FormData();
+  fd.append("language", $("language").value);
+  fd.append("scenario", scenario);
+  const r = await (await fetch("/api/strip", { method: "POST", body: fd })).json();
+  const map = { on_list: ["v-ok", "On your prescription"], not_on_list: ["v-warn", "Not on your prescription"],
+                expired: ["v-bad", "Expired"], unreadable: ["v-info", "Could not read"] };
+  const [cls, head] = map[r.verdict] || ["v-info", ""];
+  const v = $("verdict");
+  v.className = "verdict show " + cls;
+  v.innerHTML = `<span class="vhead">${head}</span>${esc(r.spoken_text)}`;
+  speak(r.spoken_text);
+}
+
+/* ---------- ask ---------- */
+async function askText() {
+  const q = $("ask-input").value.trim();
+  if (q) sendQuestion(q);
+}
+function askVoice() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { setStatus("Voice input not supported in this browser; type instead."); return; }
+  const rec = new SR();
+  rec.lang = $("language").value;
+  rec.onresult = (e) => { const q = e.results[0][0].transcript; $("ask-input").value = q; sendQuestion(q); };
+  rec.start();
+}
+async function sendQuestion(q) {
+  const fd = new FormData();
+  fd.append("question", q);
+  fd.append("language", $("language").value);
+  const r = await (await fetch("/api/ask", { method: "POST", body: fd })).json();
+  $("answer").textContent = r.answer;
+  speak(r.answer);
+}
+
+/* ---------- dose log ---------- */
+async function addLog() {
+  const med = $("log-input").value.trim();
+  if (!med) return;
+  const fd = new FormData();
+  fd.append("medicine", med);
+  fd.append("actor", state.mode === "caretaker" ? "caretaker" : "patient");
+  await fetch("/api/log", { method: "POST", body: fd });
+  $("log-input").value = "";
+  refreshLog();
+}
+async function refreshLog() {
+  if ($("logpanel").classList.contains("hidden")) return;
+  const r = await (await fetch("/api/log")).json();
+  const rows = [`<tr><th>Medicine</th><th>Action</th><th>By</th><th>When</th></tr>`];
+  r.events.forEach((e) => rows.push(
+    `<tr><td>${esc(e.medicine)}</td><td>${esc(e.action)}</td><td>${esc(e.actor)}</td>
+     <td>${esc(e.at.replace("T", " "))}</td></tr>`));
+  $("log-table").innerHTML = rows.join("");
+}
+
+/* ---------- helpers ---------- */
+function speak(text) {
+  if (!text || !("speechSynthesis" in window)) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = $("language").value;
+  u.rate = 0.95;
+  window.speechSynthesis.speak(u);
+}
+function setStatus(s) { $("scan-status").textContent = s; }
+function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, (c) =>
+  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+
+boot();

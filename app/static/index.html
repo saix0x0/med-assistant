@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sarvam Rx Assistant</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">Rx</span>
+      <div>
+        <h1>Sarvam Rx Assistant</h1>
+        <p class="tagline">Read, understand and verify medicines &mdash; by voice, in your language</p>
+      </div>
+    </div>
+    <div class="status">
+      <label class="lang">
+        Language
+        <select id="language" aria-label="Language">
+          <option value="en-IN">English</option>
+          <option value="hi-IN">हिंदी</option>
+          <option value="te-IN">తెలుగు</option>
+        </select>
+      </label>
+      <span id="mode-pill" class="pill pill-mock" title="Data source">checking…</span>
+    </div>
+  </header>
+
+  <!-- Mode chooser -->
+  <section id="chooser" class="chooser">
+    <h2>Who is using this?</h2>
+    <div class="cards">
+      <button class="mode-card" data-mode="patient">
+        <span class="mc-title">Patient</span>
+        <span class="mc-sub">Low vision &middot; voice-first</span>
+        <span class="mc-desc">Hear your prescription and check each tablet aloud.</span>
+      </button>
+      <button class="mode-card" data-mode="caretaker">
+        <span class="mc-title">Caretaker / Nurse</span>
+        <span class="mc-sub">Administering to someone</span>
+        <span class="mc-desc">See the schedule, verify a strip, log every dose.</span>
+      </button>
+      <button class="mode-card" data-mode="quick">
+        <span class="mc-title">Quick read</span>
+        <span class="mc-sub">Just read my prescription</span>
+        <span class="mc-desc">Plain-language schedule in ten seconds.</span>
+      </button>
+    </div>
+  </section>
+
+  <main id="workspace" class="workspace hidden">
+    <button id="back" class="link-back">&larr; Change user</button>
+    <h2 id="mode-heading"></h2>
+
+    <!-- Capture panel (shared) -->
+    <section class="panel">
+      <h3 id="capture-title">1. Show the prescription</h3>
+      <div class="capture">
+        <video id="cam" autoplay playsinline muted class="hidden"></video>
+        <canvas id="snap" class="hidden"></canvas>
+        <div id="droparea" class="droparea" tabindex="0" role="button"
+             aria-label="Upload or drop a prescription image or PDF">
+          <p>Drop a photo or PDF here, or</p>
+          <div class="capture-btns">
+            <button id="btn-camera" class="btn">Use camera</button>
+            <label class="btn btn-ghost">Choose file
+              <input id="file" type="file" accept="image/*,application/pdf" hidden />
+            </label>
+          </div>
+        </div>
+        <div id="cam-controls" class="capture-btns hidden">
+          <button id="btn-capture" class="btn">Capture</button>
+          <button id="btn-stopcam" class="btn btn-ghost">Stop camera</button>
+        </div>
+      </div>
+      <p id="scan-status" class="muted" aria-live="polite"></p>
+    </section>
+
+    <!-- Result -->
+    <section id="rx-result" class="panel hidden">
+      <h3>Your medicines</h3>
+      <div id="spoken" class="spoken" aria-live="polite"></div>
+      <button id="btn-replay" class="btn btn-ghost">Play again</button>
+      <table id="med-table" class="med-table"></table>
+    </section>
+
+    <!-- Verify a tablet -->
+    <section id="verify" class="panel hidden">
+      <h3 id="verify-title">2. Check a tablet</h3>
+      <div id="scenario-row" class="scenario-row"></div>
+      <div id="verdict" class="verdict" aria-live="assertive"></div>
+    </section>
+
+    <!-- Ask -->
+    <section id="ask" class="panel hidden">
+      <h3>Ask about your medicines</h3>
+      <div class="ask-row">
+        <button id="btn-mic" class="btn">Speak</button>
+        <input id="ask-input" type="text" placeholder="e.g. Which tablet at night?" />
+        <button id="btn-ask" class="btn btn-ghost">Ask</button>
+      </div>
+      <div id="answer" class="spoken" aria-live="polite"></div>
+    </section>
+
+    <!-- Dose log -->
+    <section id="logpanel" class="panel hidden">
+      <h3>Dose log</h3>
+      <div class="ask-row">
+        <input id="log-input" type="text" placeholder="Medicine just taken" />
+        <button id="btn-logadd" class="btn">Record dose</button>
+      </div>
+      <table id="log-table" class="med-table"></table>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span id="footer-models">Sarvam Vision &middot; Sarvam-105B &middot; Bulbul &middot; Saaras</span>
+    <span class="disclaimer">Reads and matches only. Not medical advice.</span>
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
