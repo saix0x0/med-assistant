@@ -4,5 +4,5 @@ uvicorn==0.34.0
 python-multipart==0.0.20
 python-dotenv==1.0.1
 
-# Added at the event when keys arrive (mock mode does NOT need it):
-#   pip install -U sarvamai
+# Sarvam SDK — used for the live model calls (Vision, 105B chat, Bulbul, Saaras).
+sarvamai==0.1.37

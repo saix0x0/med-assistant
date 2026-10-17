@@ -21,7 +21,7 @@ SARVAM_API_KEY = os.getenv("SARVAM_API_KEY", "").strip()
 BASE_URL = os.getenv("SARVAM_BASE_URL", "https://api.sarvam.ai").strip()
 
 # Model ids — verified against docs.sarvam.ai (2026-10-17). Override in .env if rejected.
-CHAT_MODEL = os.getenv("SARVAM_CHAT_MODEL", "sarvam-105b")
+CHAT_MODEL = os.getenv("SARVAM_CHAT_MODEL", "sarvam-105b-conversations")
 TTS_MODEL = os.getenv("SARVAM_TTS_MODEL", "bulbul:v3")
 STT_MODEL = os.getenv("SARVAM_STT_MODEL", "saaras:v4")
 
