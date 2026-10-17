@@ -1,0 +1,20 @@
+# Render deploy config. On Render: New + → Web Service → connect this GitHub repo.
+# Render reads this file and sets everything up. Free plan, HTTPS included.
+services:
+  - type: web
+    name: med-assistant
+    runtime: python
+    plan: free
+    region: singapore                 # closest Render region to India
+    branch: nurse-only-tablet-check    # change to main if you merge
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+      # Public demo runs in MOCK mode (free, no credit spend from random visitors).
+      # To go live on Sarvam: set MODE=sarvam here and add SARVAM_API_KEY below.
+      - key: MODE
+        value: mock
+      - key: SARVAM_API_KEY
+        sync: false                    # add in the Render dashboard; stays secret
