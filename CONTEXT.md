@@ -4,7 +4,7 @@ Operational memory for the Sarvam Campus '26 build-along. If you (or another
 agent) pick this up cold, read this first. The full rationale is in `REPORT.md`.
 
 ## What this is
-Sarvam Rx Assistant: scan a prescription/strip → read + cross-check → speak it in
+Med Assistant: scan a prescription/strip → read + cross-check → speak it in
 Telugu/Hindi/English. Three modes (Patient / Caretaker / Quick read) over one
 engine. Project A2 ("Medicine Guard") from the idea shortlist.
 

@@ -1,4 +1,4 @@
-/* Sarvam Rx Assistant - front-end logic.
+/* Med Assistant - front-end logic.
  * Talks to the FastAPI backend; speaks results with the browser voice today
  * (swappable for Bulbul server-side). No framework, plain DOM. */
 "use strict";

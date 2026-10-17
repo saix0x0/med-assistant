@@ -1,4 +1,4 @@
-# Sarvam Rx Assistant — Project Report
+# Med Assistant — Project Report
 
 **Sarvam Campus '26 × IIIT Hyderabad — Build-along submission**
 *Read, understand and verify medicines — by voice, in your language.*
@@ -13,7 +13,7 @@
 
 Millions of Indians cannot read their own medicines — some because they can't
 see, many more because the prescription is handwritten, in a language or in
-medical shorthand they don't understand. **Sarvam Rx Assistant** points a phone
+medical shorthand they don't understand. **Med Assistant** points a phone
 (or laptop) camera at a prescription or a medicine strip, reads it, and **speaks
 it back in the person's own language (Telugu / Hindi / English)**. Its unique
 step: it **cross-checks the strip in your hand against your prescription** and

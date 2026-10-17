@@ -1,4 +1,4 @@
-# Sarvam Rx Assistant
+# Med Assistant
 
 **Read, understand and verify medicines — by voice, in your language.**
 Built for Sarvam Campus '26 × IIIT Hyderabad on Sarvam's AI stack.

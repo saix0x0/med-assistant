@@ -25,7 +25,7 @@ from app.core import prescription as rx_mod
 from app.core import safety
 from app.providers import get_provider
 
-app = FastAPI(title="Sarvam Rx Assistant")
+app = FastAPI(title="Med Assistant")
 STATIC = Path(__file__).resolve().parent / "static"
 
 # One saved prescription for the demo (single user). A real app keys this per patient.
