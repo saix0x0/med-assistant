@@ -106,18 +106,43 @@ function syncVoiceHint() {
   hint.classList.toggle("hidden", !show);
 }
 function voicePrompt() {
-  return state.mode ? "" : "Say patient, nurse, or general user.";
+  if (!state.mode) return "Say patient, nurse, or general user.";
+  if (state.mode === "patient" || state.mode === "caretaker")
+    return "Say: on the list, not on the list, expired, or cannot read, to check a tablet.";
+  return "";
 }
 // Exposed so the routing can be unit-checked without a microphone.
 function routeCommand(t) {
-  if (/\b(patient|blind|रोगी|రోగి)\b/.test(t)) { enterMode("patient"); speak("Patient mode."); return "patient"; }
+  // In-mode voice actions (Patient / Caretaker) are checked BEFORE navigation,
+  // so "on the list" triggers a tablet check instead of being heard as a mode.
+  if (state.mode === "patient" || state.mode === "caretaker") {
+    const r = routeModeCommand(t);
+    if (r) return r;
+  }
+  if (/\b(patient|blind|रोगी|రోగి)\b/.test(t)) { enterMode("patient"); speakPatientEntry(); return "patient"; }
   if (/\b(nurse|caretaker|care\s?taker|care|नर्स|నర్స్)\b/.test(t)) { enterMode("caretaker"); speak("Caretaker mode."); return "caretaker"; }
-  if (/\b(general|common|normal|quick|read|सामान्य|సాధారణ)\b/.test(t)) { enterMode("quick"); speak("Quick read."); return "quick"; }
+  if (/\b(general|common|normal|quick)\b/.test(t)) { enterMode("quick"); speak("Quick read."); return "quick"; }
   if (/\b(back|change user|menu|home)\b/.test(t)) { leaveMode(); speak("Main menu."); return "back"; }
   if (/\b(again|repeat|play)\b/.test(t)) { speak(state.lastSpoken); return "repeat"; }
   return null;
 }
 window.routeCommand = routeCommand;   // for verification
+
+// Voice actions available inside Patient / Caretaker mode. Order matters:
+// "not on the list" contains "on the list", so negatives are checked first.
+function routeModeCommand(t) {
+  if (/not on|isn'?t on|not in|not my|not on my/.test(t)) { checkStrip("not_on_list"); return "strip:not_on_list"; }
+  if (/expire/.test(t)) { checkStrip("expired"); return "strip:expired"; }
+  if (/can'?t read|cannot read|can not read|unreadable|not clear|unclear|turn.*over/.test(t)) { checkStrip("unreadable"); return "strip:unreadable"; }
+  if (/on (the |my )?(list|prescription)|in (the |my )?(list|prescription)|it'?s on/.test(t)) { checkStrip("match"); return "strip:match"; }
+  if (/\bscan\b|\bcamera\b|read (my )?prescription|take (a )?photo|new prescription/.test(t)) { startCamera(); return "scan"; }
+  if (/again|repeat|play/.test(t)) { speak(state.lastSpoken); return "repeat"; }
+  return null;
+}
+function speakPatientEntry() {
+  speak("Patient mode. To check a tablet, say: on the list, not on the list, "
+      + "expired, or cannot read. Say scan to read a prescription.");
+}
 
 /* ---------- mode switching ---------- */
 function enterMode(mode) {
