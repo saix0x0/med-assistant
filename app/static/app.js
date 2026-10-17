@@ -8,7 +8,7 @@ const state = { mode: null, stream: null, lastSpoken: "", mock: true };
 const VOICE = { rec: null, on: false, want: false };
 
 const MODE_META = {
-  patient:  { heading: "Patient", show: ["verify", "ask", "logpanel"], voice: true },
+  patient:  { heading: "Patient", show: ["ask", "logpanel"], voice: true },
   caretaker:{ heading: "Caretaker / Nurse", show: ["verify", "logpanel"], voice: false },
   quick:    { heading: "Quick read", show: [], voice: false },
 };
@@ -107,8 +107,10 @@ function syncVoiceHint() {
 }
 function voicePrompt() {
   if (!state.mode) return "Say patient, nurse, or general user.";
-  if (state.mode === "patient" || state.mode === "caretaker")
+  if (state.mode === "caretaker")
     return "Say: on the list, not on the list, expired, or cannot read, to check a tablet.";
+  if (state.mode === "patient")
+    return "Say scan to read a prescription, or repeat to hear it again.";
   return "";
 }
 // Exposed so the routing can be unit-checked without a microphone.
@@ -131,17 +133,19 @@ window.routeCommand = routeCommand;   // for verification
 // Voice actions available inside Patient / Caretaker mode. Order matters:
 // "not on the list" contains "on the list", so negatives are checked first.
 function routeModeCommand(t) {
-  if (/not on|isn'?t on|not in|not my|not on my/.test(t)) { checkStrip("not_on_list"); return "strip:not_on_list"; }
-  if (/expire/.test(t)) { checkStrip("expired"); return "strip:expired"; }
-  if (/can'?t read|cannot read|can not read|unreadable|not clear|unclear|turn.*over/.test(t)) { checkStrip("unreadable"); return "strip:unreadable"; }
-  if (/on (the |my )?(list|prescription)|in (the |my )?(list|prescription)|it'?s on/.test(t)) { checkStrip("match"); return "strip:match"; }
+  // Tablet cross-check commands exist only in the Caretaker/Nurse mode.
+  if (state.mode === "caretaker") {
+    if (/not on|isn'?t on|not in|not my|not on my/.test(t)) { checkStrip("not_on_list"); return "strip:not_on_list"; }
+    if (/expire/.test(t)) { checkStrip("expired"); return "strip:expired"; }
+    if (/can'?t read|cannot read|can not read|unreadable|not clear|unclear|turn.*over/.test(t)) { checkStrip("unreadable"); return "strip:unreadable"; }
+    if (/on (the |my )?(list|prescription)|in (the |my )?(list|prescription)|it'?s on/.test(t)) { checkStrip("match"); return "strip:match"; }
+  }
   if (/\bscan\b|\bcamera\b|read (my )?prescription|take (a )?photo|new prescription/.test(t)) { startCamera(); return "scan"; }
   if (/again|repeat|play/.test(t)) { speak(state.lastSpoken); return "repeat"; }
   return null;
 }
 function speakPatientEntry() {
-  speak("Patient mode. To check a tablet, say: on the list, not on the list, "
-      + "expired, or cannot read. Say scan to read a prescription.");
+  speak("Patient mode. Say scan to read a prescription, or repeat to hear it again.");
 }
 
 /* ---------- mode switching ---------- */
