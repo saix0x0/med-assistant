@@ -167,9 +167,18 @@ the app can never crash for a missing key.
 ```bash
 git clone https://github.com/saix0x0/med-assistant
 cd med-assistant
-./run.sh
+bash run.sh
 ```
-Open **http://localhost:8000** (or **:8077** if 8000 is busy).
+Open **http://localhost:8000** (or **:8077** if 8000 is busy). Needs Python 3.9+.
+The script makes its own virtualenv and installs everything on first run — no key
+needed; it runs in mock mode. Camera and microphone work because it's `localhost`.
+
+If you'd rather run it by hand:
+```bash
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+.venv/bin/python -m uvicorn app.main:app --port 8077
+```
 
 **Run the tests:**
 ```bash
