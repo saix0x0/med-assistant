@@ -53,6 +53,21 @@ select, input[type=text] {
 .pill-mock { background: rgba(245,158,11,.15); color: var(--warn); }
 .pill-live { background: rgba(34,197,94,.15); color: var(--ok); }
 
+.voice-btn {
+  display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
+  background: var(--panel-2); color: var(--ink); border: 1px solid var(--line);
+  border-radius: 999px; padding: 8px 14px; font-size: 13px; font-weight: 600;
+}
+.voice-btn .vdot {
+  width: 9px; height: 9px; border-radius: 50%; background: var(--muted);
+}
+.voice-btn.on { border-color: var(--ok); color: var(--ok); }
+.voice-btn.on .vdot { background: var(--ok); animation: pulse 1.2s infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+.voice-hint {
+  text-align: center; color: var(--ok); font-size: 15px; margin: -10px 0 18px;
+}
+
 .chooser { max-width: 1000px; margin: 40px auto; padding: 0 20px; }
 .chooser h2 { text-align: center; font-size: 24px; margin-bottom: 24px; }
 .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; }

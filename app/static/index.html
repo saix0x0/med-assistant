@@ -16,6 +16,10 @@
       </div>
     </div>
     <div class="status">
+      <button id="voice-toggle" class="voice-btn" aria-pressed="false"
+              title="Voice control (press V)">
+        <span class="vdot"></span><span id="voice-label">Voice off</span>
+      </button>
       <label class="lang">
         Language
         <select id="language" aria-label="Language">
@@ -31,6 +35,9 @@
   <!-- Mode chooser -->
   <section id="chooser" class="chooser">
     <h2>Who is using this?</h2>
+    <p id="voice-hint" class="voice-hint hidden" aria-live="polite">
+      Voice control is on. Say &ldquo;patient&rdquo;, &ldquo;nurse&rdquo;, or &ldquo;general&rdquo;.
+    </p>
     <div class="cards">
       <button class="mode-card" data-mode="patient">
         <span class="mc-title">Patient</span>

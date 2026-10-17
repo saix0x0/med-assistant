@@ -51,6 +51,16 @@ UI → FastAPI (`app/main.py`) → `get_provider()` (mock|sarvam) for the model 
 - Full ~195k Kaggle medicine CSV: drop as `app/data/indian_medicines.csv`
   (auto-loaded; gitignored). Seed list of ~50 meds ships in-repo.
 
+## Voice control (added)
+Header "Voice off" toggle (or press **V**) turns on hands-free navigation: say
+"patient" / "nurse" / "general" to open a mode, "back", "repeat". Uses the
+browser's speech recognition (instant, no credits); routes commands via
+`routeCommand()` in app.js. Clicks all still work. Mic blocked/denied → degrades
+cleanly (spoken + on-screen notice), never crashes. At the event, voice *questions*
+(the "Speak" button) route through **Sarvam Saaras** via `/api/transcribe` when
+live, browser otherwise. NOTE: mic is blocked inside the Claude browser pane — the
+live mic was NOT testable there; confirm it in real Chrome (API presence verified).
+
 ## Theme alignment (say in pitch)
 Hits all four Sarvam pillars: document intelligence (Vision), AI agents (105B),
 multilingual (Te/Hi/En), voice (Bulbul + Saaras). India-hosted → DPDP advantage.

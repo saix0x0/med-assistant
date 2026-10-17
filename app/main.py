@@ -95,6 +95,17 @@ def get_log():
     return {"ok": True, "events": dose_log.list_events()}
 
 
+@app.post("/api/transcribe")
+async def transcribe(file: UploadFile = File(...), language: str = Form("en-IN")):
+    """Voice input -> text. Uses Sarvam Saaras in live mode; in mock mode the
+    browser's own recognition is used instead, so this returns a harmless
+    fallback. The front-end only calls this when running live."""
+    provider = get_provider()
+    data = await file.read()
+    text = provider.transcribe(data, language)
+    return JSONResponse({"ok": True, "text": text, "provider": provider.name})
+
+
 @app.get("/api/state")
 def state():
     rx = STATE["rx"]
