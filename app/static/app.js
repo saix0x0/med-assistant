@@ -1,6 +1,6 @@
 /* Med Assistant - front-end logic.
- * Talks to the FastAPI backend; speaks results with the browser voice today
- * (swappable for Bulbul server-side). No framework, plain DOM. */
+ * Talks to the FastAPI backend; speaks results with the browser voice or with
+ * Bulbul server-side. No framework, plain DOM. */
 "use strict";
 
 const $ = (id) => document.getElementById(id);
@@ -40,6 +40,11 @@ async function boot() {
   $("btn-mic").addEventListener("click", askVoice);
   $("btn-logadd").addEventListener("click", addLog);
   buildScenarioButtons();
+  $("strip-file").addEventListener("change", (e) => {
+    const f = e.target.files[0];
+    if (f) checkStrip("match", f);
+    e.target.value = "";
+  });
   refreshUsage();
 
   // Voice control (optional layer; all clicks keep working without it).
@@ -52,8 +57,8 @@ async function boot() {
 
 /* ---------- voice control ---------- */
 // Live navigation uses the browser's speech recognition (instant, no credits).
-// At the event, voice *questions* can additionally route through Sarvam Saaras
-// via /api/transcribe; see askVoice(). All of this is additive — buttons remain.
+// In live mode, voice *questions* route through Sarvam Saaras via
+// /api/transcribe; see askVoice(). All of this is additive; buttons remain.
 function supportsSR() {
   return "SpeechRecognition" in window || "webkitSpeechRecognition" in window;
 }
@@ -237,7 +242,7 @@ function renderRx(rx, spoken) {
 
 /* ---------- verify a strip ---------- */
 function buildScenarioButtons() {
-  // In mock mode the strip image is ignored, so we expose the four demo cases.
+  // Sample strips: show each of the four verdicts without a physical strip.
   const defs = [
     ["match", "Tablet on the list"],
     ["not_on_list", "Not on the list"],
@@ -253,11 +258,20 @@ function buildScenarioButtons() {
     $("scenario-row").appendChild(b);
   });
 }
-async function checkStrip(scenario) {
+async function checkStrip(scenario, file) {
   const fd = new FormData();
   fd.append("language", $("language").value);
   fd.append("scenario", scenario);
-  const r = await (await fetch("/api/strip", { method: "POST", body: fd })).json();
+  if (file) fd.append("file", file);
+  $("strip-status").textContent = file ? "Reading the strip…" : "";
+  let r;
+  try {
+    r = await (await fetch("/api/strip", { method: "POST", body: fd })).json();
+  } catch (e) {
+    $("strip-status").textContent = "Could not read the strip. Please try again.";
+    return;
+  }
+  $("strip-status").textContent = "";
   const map = { on_list: ["v-ok", "On your prescription"], not_on_list: ["v-warn", "Not on your prescription"],
                 expired: ["v-bad", "Expired"], unreadable: ["v-info", "Could not read"] };
   const [cls, head] = map[r.verdict] || ["v-info", ""];

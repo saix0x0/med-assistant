@@ -98,6 +98,13 @@
     <section id="verify" class="panel hidden">
       <h3 id="verify-title">2. Check a tablet</h3>
       <p class="muted voice-cmd-hint">Or say it: &ldquo;on the list&rdquo;, &ldquo;not on the list&rdquo;, &ldquo;expired&rdquo;, &ldquo;cannot read&rdquo; (turn Voice on).</p>
+      <div class="capture-btns">
+        <label class="btn">Photo of the strip
+          <input id="strip-file" type="file" accept="image/*" capture="environment" hidden />
+        </label>
+      </div>
+      <p id="strip-status" class="muted" aria-live="polite"></p>
+      <p class="muted">Or try a sample strip:</p>
       <div id="scenario-row" class="scenario-row"></div>
       <div id="verdict" class="verdict" aria-live="assertive"></div>
     </section>
