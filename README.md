@@ -214,4 +214,4 @@ Without a key it stays in mock mode automatically — nothing breaks.
 Built for **Sarvam Campus '26 × IIIT Hyderabad**, on Sarvam's AI platform —
 Sarvam Vision, Sarvam-105B, Bulbul and Saaras.
 
-Deeper write-up: [`REPORT.md`](REPORT.md) · Build notes: [`CONTEXT.md`](CONTEXT.md)
+Deeper write-up: [`REPORT.md`](REPORT.md)
