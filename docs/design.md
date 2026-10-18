@@ -1,6 +1,6 @@
-# Med Assistant — Project Report
+# Med Assistant: design notes
 
-**Sarvam Campus '26 × IIIT Hyderabad — Build-along submission**
+**Built at Sarvam Campus '26 × IIIT Hyderabad**
 *Read, understand and verify medicines — by voice, in your language.*
 
 > This report is written to be read by anyone — whether or not you know machine
@@ -111,10 +111,10 @@ followed by a predictable safety net (rules).
 
 ---
 
-## 6. The Sarvam models used — and how we align with the event
+## 6. The Sarvam models used
 
-The event theme is: *multilingual AI, voice AI, document intelligence, AI agents.*
-This project uses **all four**:
+Sarvam's build themes are *multilingual AI, voice AI, document intelligence and
+AI agents*. This project uses **all four**:
 
 | Step in the assembly line | Sarvam model | Theme pillar it hits |
 |---|---|---|
@@ -126,73 +126,53 @@ This project uses **all four**:
 
 Built on the **Sarvam SDK** (`sarvamai`) and designed to run on the **Sarvam /
 Indus** stack. Because it is an India-hosted stack, health data (prescriptions)
-stays in-country — a genuine advantage under India's DPDP Act, worth stating in
-the pitch.
+stays in-country — a genuine advantage under India's DPDP Act.
 
 ---
 
 ## 7. The skeleton — how the code is laid out
 
 ```
-sarvam-medguard/
+med-assistant/
 ├── app/
 │   ├── config.py            # one switch: MODE=mock | sarvam
-│   ├── main.py              # FastAPI backend (6 endpoints)
-│   ├── providers/           # THE SEAM between our app and Sarvam
-│   │   ├── base.py          #   the 5-method interface
-│   │   ├── mock.py          #   runs today, no keys (canned results)
-│   │   └── sarvam.py        #   the ONE file we finish at the event
-│   ├── core/                # deterministic brain — no AI, fully tested
+│   ├── main.py              # FastAPI backend
+│   ├── providers/           # the seam between the app and Sarvam
+│   │   ├── base.py          #   the provider interface
+│   │   ├── mock.py          #   offline provider, canned results
+│   │   └── sarvam.py        #   the only file that calls Sarvam
+│   ├── core/                # deterministic logic, no AI, tested
 │   │   ├── dosing.py        #   1-0-1, BD, TDS, a/f, x5d → structured schedule
-│   │   ├── medicines.py     #   fuzzy-match against real Indian-medicine list
+│   │   ├── medicines.py     #   fuzzy-match against known Indian medicines
 │   │   ├── prescription.py  #   raw text → validated medicine list
 │   │   ├── crosscheck.py    #   strip vs prescription → verdict
-│   │   ├── safety.py        #   plain-language text in en/hi/te + disclaimers
+│   │   ├── safety.py        #   plain-language text in en/hi/te + disclaimer
 │   │   └── log.py           #   dose record
-│   ├── data/                # seed medicine list + mock prescription
+│   ├── data/                # seed medicine list + sample prescription
 │   └── static/              # the three-mode web UI (HTML/CSS/JS)
-└── tests/                   # 16 tests, all green; + smoke_sarvam.py (live API check)
+├── scripts/                 # live Sarvam checks (hello_sarvam, smoke_sarvam)
+└── tests/                   # unit tests
 ```
 
-**Why this shape matters for a 60-minute build-along:** everything except
-`providers/sarvam.py` is already built and tested. On event day the entire task
-is: paste the key, flip the switch, and fill in (or confirm) that one file. All
-three modes light up at once because they share the same engine.
+**Why this shape matters:** every model call sits behind one interface. The mock
+provider and the Sarvam provider implement the same methods, so switching from
+offline to live changes no other file, and all three modes light up together
+because they share one engine.
 
 ---
 
-## 8. The one real risk — handwriting — and how we handle it
+## 8. Built for noisy input
 
-Sarvam Vision supports a `handwritten` mode and confirms **Indian-language**
-handwriting. It does **not** explicitly claim **English** handwriting — and most
-Indian prescriptions are handwritten in English (drug names are English). Classic
-illegible doctor-scrawl is the hardest possible case.
+Handwritten prescriptions are the hardest input a reader can get, so the design
+never takes a single model's output as final. Reading recovers in three layers:
+Sarvam Vision reads the image, Sarvam-105B cleans the text into a structured
+list, and the rule-based matcher validates every name against known medicines.
+Anything that still doesn't resolve is reported as unreadable, with a prompt to
+show it again, rather than guessed.
 
-We do not pretend otherwise. The design assumes Vision's output is noisy and
-recovers in three layers (Vision → 105B clean-up → rule-based matcher), and when
-confidence is low the app **says so** instead of guessing — which, for a medicine
-app, is the correct behaviour. For the live demo we use a legibly written
-prescription and keep one genuine scrawl as an honest "hard case."
-
-To check Vision on your own photo before trusting it, run
-`MODE=sarvam .venv/bin/python tests/smoke_sarvam.py path/to/prescription.jpg`.
+To try Vision on your own photo:
+`MODE=sarvam .venv/bin/python -m scripts.smoke_sarvam path/to/prescription.jpg`
 
 ---
-
-## 9. Honest limitations
-
-- Reads and matches only — **never medical advice**; the disclaimer is spoken.
-- English doctor-scrawl may fail; the app admits it rather than guessing.
-- Cut strips can lose the name/expiry — reported, not invented.
-- The dose log is in-memory for the demo (a real build stores it per patient).
-
----
-
-## 10. Status
-
-- Runs fully offline in **mock mode**, and live on Sarvam with one setting
-  (`MODE=sarvam` plus a key in `.env`).
-- **16 tests pass**; the three-mode UI is verified end to end.
-- Telugu / Hindi / English output, spoken by Bulbul or the browser voice.
 
 *Reads and matches only. Not medical advice.*

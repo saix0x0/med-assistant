@@ -1,0 +1,29 @@
+name: Bug report
+description: Something isn't working as expected
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: dropdown
+    id: mode
+    attributes:
+      label: App mode
+      options: [Patient, Caretaker / Nurse, Quick read]
+  - type: dropdown
+    id: provider
+    attributes:
+      label: Provider
+      options: [mock, sarvam]
+  - type: textarea
+    id: env
+    attributes:
+      label: Environment
+      description: OS, browser and Python version.
+  - type: markdown
+    attributes:
+      value: "Please do not attach real prescriptions or any personal health information."
