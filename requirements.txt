@@ -1,7 +1,7 @@
 # Core app — needed today (mock mode runs on these alone).
 fastapi==0.115.6
 uvicorn==0.34.0
-python-multipart==0.0.20
+python-multipart==0.0.32
 python-dotenv==1.0.1
 
 # Sarvam SDK — used for the live model calls (Vision, 105B chat, Bulbul, Saaras).
