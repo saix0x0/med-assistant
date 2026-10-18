@@ -1,10 +1,9 @@
-"""Run this FIRST at the event, right after putting the key in .env.
+"""Live connectivity check for the Sarvam provider.
 
-It checks each Sarvam API responds, Vision first (the biggest risk). It does not
-touch the web app, so you learn fast whether handwriting reading works before you
-wire anything. Usage:
+Calls Sarvam Vision on a prescription photo, structures it with Sarvam-105B,
+and asks one question. It does not start the web app. Usage:
 
-    MODE=sarvam .venv/bin/python tests/smoke_sarvam.py path/to/prescription.jpg
+    MODE=sarvam .venv/bin/python -m scripts.smoke_sarvam path/to/prescription.jpg
 """
 import sys
 

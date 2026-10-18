@@ -1,10 +1,10 @@
-"""Mock provider — runs the entire app offline, no keys, for rehearsal.
+"""Mock provider: runs the entire app offline, with no API keys.
 
 read_document returns a realistic handwritten-style prescription; read_strip
 returns one of four canned strips so the presenter can show each verdict
 (match / not-on-list / expired / unreadable). assist_extract returns None so the
 deterministic parser does the structuring. speak returns None so the browser's
-built-in voice speaks. This is the state the scaffold ships in today.
+built-in voice speaks.
 """
 from __future__ import annotations
 
@@ -44,7 +44,7 @@ class MockProvider:
 
     def answer(self, question: str, context: str, language: str = "en-IN") -> str:
         q = (question or "").lower()
-        # tiny rule-based stand-in; real answers come from 105B at the event
+        # small rule-based stand-in; in live mode Sarvam-105B answers
         if "night" in q or "రాత్రి" in question or "रात" in question:
             return "Dolo 650 and Metformin 500 are taken at night."
         if "how many" in q or "days" in q:

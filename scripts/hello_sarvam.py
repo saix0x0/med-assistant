@@ -5,7 +5,7 @@ one chat completion with sarvam-105b-conversations, then prints the reply. The k
 is read from the environment (.env) — never hardcoded, never printed.
 
 Run:
-    .venv/bin/python hello_sarvam.py
+    .venv/bin/python -m scripts.hello_sarvam
 
 Needs SARVAM_API_KEY set in .env first.
 """

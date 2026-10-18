@@ -1,15 +1,11 @@
-"""Real Sarvam provider. THIS is the file you finish at the event.
+"""Sarvam provider: the only module that calls the Sarvam SDK.
 
-Everything else in the app is done. On build day:
-  1. pip install -U sarvamai
-  2. put SARVAM_API_KEY in .env and set MODE=sarvam
-  3. run tests/smoke_sarvam.py  -> confirms each API responds (Vision first!)
-  4. tune the two prompts below if needed, then demo.
+Implements the Provider interface (see base.py) with Sarvam Vision, Sarvam-105B,
+Bulbul and Saaras. Enable it with MODE=sarvam and SARVAM_API_KEY in .env, and
+check connectivity with `python -m scripts.smoke_sarvam`.
 
-Written against the verified SDK notes (docs.sarvam.ai, 2026-10-17). The calls
-below are the documented shapes; the SDK import is lazy so mock mode never needs
-the package installed. Anything that fails falls back gracefully so a single
-flaky API cannot crash the whole demo.
+The SDK import is lazy, so mock mode never needs the package installed. Any
+failed call falls back gracefully, so a single flaky API cannot crash the app.
 """
 from __future__ import annotations
 
