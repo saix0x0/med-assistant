@@ -151,7 +151,7 @@ sarvam-medguard/
 │   │   └── log.py           #   dose record
 │   ├── data/                # seed medicine list + mock prescription
 │   └── static/              # the three-mode web UI (HTML/CSS/JS)
-└── tests/                   # 15 tests, all green; + smoke_sarvam.py for event day
+└── tests/                   # 16 tests, all green; + smoke_sarvam.py (live API check)
 ```
 
 **Why this shape matters for a 60-minute build-along:** everything except
@@ -174,38 +174,12 @@ confidence is low the app **says so** instead of guessing — which, for a medic
 app, is the correct behaviour. For the live demo we use a legibly written
 prescription and keep one genuine scrawl as an honest "hard case."
 
-**This is the first thing we test the moment we receive the API key**
-(`tests/smoke_sarvam.py`), before wiring anything else.
+To check Vision on your own photo before trusting it, run
+`MODE=sarvam .venv/bin/python tests/smoke_sarvam.py path/to/prescription.jpg`.
 
 ---
 
-## 9. Build plan for the event (how the 60 minutes are spent)
-
-The framework in this repo is **Phase 1, already done**. The event is Phase 2.
-
-1. **(5 min) Smoke-test Vision first** — `MODE=sarvam python tests/smoke_sarvam.py photo.jpg`.
-   Confirm handwriting reads. This de-risks everything.
-2. **(20 min) Wire `providers/sarvam.py`** — it is already written to the SDK;
-   confirm each of the 5 methods returns real data, adjust the two prompts.
-3. **(15 min) Tune extraction** — check 105B's medicine list on 2–3 real photos.
-4. **(10 min) Optional Bulbul voice** — set `TTS_PROVIDER=bulbul` for natural Telugu.
-5. **(10 min) Rehearse the 90-second demo**, record a backup run in case Wi-Fi dies.
-
----
-
-## 10. 90-second demo script
-
-1. "Who is using this?" → choose **Patient**.
-2. Drop a prescription PDF → the app **speaks it in Telugu** and lists the meds.
-3. Show a strip that **isn't** on the prescription → hear the warning.
-4. Show an **expired** strip → hear "do not use it."
-5. Ask by voice, *"Which tablet at night?"* → it answers from the prescription.
-6. One line: *"Same tool, three users — the blind patient, the nurse, the family
-   member — all on Sarvam's India-made stack."*
-
----
-
-## 11. Honest limitations
+## 9. Honest limitations
 
 - Reads and matches only — **never medical advice**; the disclaimer is spoken.
 - English doctor-scrawl may fail; the app admits it rather than guessing.
@@ -214,11 +188,11 @@ The framework in this repo is **Phase 1, already done**. The event is Phase 2.
 
 ---
 
-## 12. Status right now
+## 10. Status
 
-- Full framework built and running on a laptop in **mock mode** — no keys needed.
-- **15/15 tests pass**; the three-mode UI is verified end-to-end.
-- Telugu / Hindi / English output works today (browser voice + templated phrasing).
-- Only `providers/sarvam.py` awaits the live key — exactly as planned.
+- Runs fully offline in **mock mode**, and live on Sarvam with one setting
+  (`MODE=sarvam` plus a key in `.env`).
+- **16 tests pass**; the three-mode UI is verified end to end.
+- Telugu / Hindi / English output, spoken by Bulbul or the browser voice.
 
 *Reads and matches only. Not medical advice.*
