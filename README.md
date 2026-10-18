@@ -6,7 +6,7 @@
 
 [![CI](https://github.com/saix0x0/med-assistant/actions/workflows/ci.yml/badge.svg)](https://github.com/saix0x0/med-assistant/actions/workflows/ci.yml)
 ![Python](https://img.shields.io/badge/python-3.10%2B-3776AB)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.143-009688)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 Built in a 45-minute build-along at **Sarvam Campus '26 × IIIT Hyderabad**<br>
